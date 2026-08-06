@@ -99,14 +99,20 @@ await fs.writeFile(path.join(web, 'lib', 'embed-assets.generated.ts'), out);
 // Two static bundles alongside the assembled route: the whole library, for
 // anyone switching styles at runtime, and the embeddable builder dashboard.
 //
-// Deliberately read+write rather than `fs.copyFile`. Every other file in this
-// script — core.js, all ~200 chunks — goes through `readFile` and was never
-// once missing. Only these two calls, the only ones using `copyFile`, hit a
-// reproducible ENOENT on one hosted build runner even moments after the
-// source file had just been read successfully by this same process.
-// `copyFile` takes an OS-level fast path (copy_file_range/sendfile) that
-// `readFile`/`writeFile` do not, which is the one mechanical difference
-// between the calls that fail and the calls that never do.
+// Every file `public/` ever holds — embed.js, embed.full.js, dashboard.js,
+// the m/ chunk mirror — is generated at build time and therefore gitignored.
+// Git does not track empty directories, so on a fresh clone `public/` does
+// not exist at all until something creates it; it only ever seemed to on a
+// dev machine because a previous build had already made it once and it was
+// never deleted. `fs.writeFile` does not create parent directories, so this
+// is required before either write below, not optional.
+//
+// (This is also, in hindsight, almost certainly what the earlier `fs.copyFile`
+// ENOENT was too — copyFile's error object names the *source* path regardless
+// of which side actually failed, which pointed the previous investigation at
+// the wrong file. Read+write leaves nothing ambiguous the next time.)
+await fs.mkdir(path.join(web, 'public'), { recursive: true });
+
 async function copyFileContents(src, dest) {
   await fs.writeFile(dest, await fs.readFile(src));
 }
