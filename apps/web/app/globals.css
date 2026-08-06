@@ -1,0 +1,489 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   CursorKit — "Instrument"
+
+   The subject is measurement: graticules, reticles, telemetry. The palette is
+   a blue-biased near-black with a single phosphor-amber signal, because the
+   cursors themselves supply every other colour on the page and the chrome must
+   not compete with them.
+
+   Dark is the default rather than the OS preference: the product is cursor
+   animation, and cursor animation reads on dark. Light is a fully designed
+   alternative — a drafting sheet — reachable from the header toggle.
+   ========================================================================== */
+
+:root {
+  /* Ground and surfaces */
+  --ground: #0a0d13;
+  --panel: #101520;
+  --raised: #161c29;
+  --rule: #212938;
+  --rule-soft: #171d29;
+
+  /* Ink */
+  --ink: #dfe4ec;
+  --bright: #ffffff;
+  /* 5.4:1 on --ground. Muted greys are where dark themes quietly fail AA, so
+     this is picked against the contrast target rather than by eye. */
+  --dim: #7d8899;
+
+  /* The one accent */
+  --signal: #ffa132;
+  --signal-ink: #0a0d13;
+
+  /* State, kept separate from the accent */
+  --ok: #5dd39e;
+  --warn: #ffc857;
+  --crit: #ff6b6b;
+
+  --grid: rgba(255, 255, 255, 0.028);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 18px 44px -20px rgba(0, 0, 0, 0.8);
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  /* A drafting sheet.
+
+     The first attempt at this was a straight token swap — white panels on light
+     grey — and it fell apart, because the dark theme's structure is carried
+     entirely by hairlines and by panels sitting *lighter* than the ground.
+     Invert the values and both signals vanish: every rule turns into a faint
+     scratch and every panel dissolves into the page.
+
+     So the relationship is rebuilt rather than flipped. Panels stay white but
+     gain real elevation, the ground drops to a definite grey so they have
+     something to lift off, and rules go two steps darker than a naive inversion
+     would put them. The accent shifts hue too: amber that glows on black turns
+     to mud on paper, so light mode uses a burnt orange with the saturation to
+     survive. */
+  --ground: #e7eaf0;
+  --panel: #ffffff;
+  --raised: #f2f4f8;
+  --rule: #c3cad7;
+  --rule-soft: #d9dee8;
+
+  --ink: #121826;
+  --bright: #05070c;
+  --dim: #4d5768;
+
+  --signal: #c2410c;
+  --signal-ink: #ffffff;
+
+  --ok: #146c48;
+  --warn: #8a5a00;
+  --crit: #b3261e;
+
+  --grid: rgba(18, 24, 38, 0.05);
+  --shadow: 0 1px 2px rgba(18, 24, 38, 0.06), 0 12px 28px -18px rgba(18, 24, 38, 0.35);
+
+  color-scheme: light;
+}
+
+/* Panels have to lift off the page in light mode; in dark they are already
+   lighter than the ground and a shadow would only muddy them. */
+:root[data-theme='light'] .panel,
+:root[data-theme='light'] .card {
+  box-shadow: var(--shadow);
+}
+
+:root[data-theme='light'] .card:hover,
+:root[data-theme='light'] .card:focus-within {
+  box-shadow: 0 2px 4px rgba(18, 24, 38, 0.08), 0 18px 36px -20px rgba(18, 24, 38, 0.45);
+}
+
+/* The sticky bars are translucent over the ground. At light values the default
+   blur alone is not enough separation, so they get a rule and more opacity. */
+:root[data-theme='light'] header,
+:root[data-theme='light'] .sticky {
+  background: rgba(231, 234, 240, 0.92);
+}
+
+/* Code blocks invert their relationship: on paper, a recessed well reads better
+   than a raised slab. */
+:root[data-theme='light'] .code {
+  background: #f6f7fa;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Type scale. Display sizes use the width axis; body stays at normal width
+     so long copy does not turn into signage. */
+  h1,
+  h2,
+  h3 {
+    font-variation-settings: 'wdth' 112;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    line-height: 1.02;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--signal);
+    color: var(--signal-ink);
+  }
+
+  /* The overlay canvas covers the page, so focus rings are the only way a
+     keyboard user can see where they are. They must never be subtle. */
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Nothing in the layout may scroll the body sideways. */
+  body,
+  main {
+    overflow-x: clip;
+  }
+}
+
+@layer components {
+  /* ---------------------------------------------------------------- shell */
+
+  .shell {
+    width: 100%;
+    max-width: 78rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 4vw, 3rem);
+  }
+
+  /* The module grid, drawn as a background rather than as elements. Two
+     hairlines mark the reading column; the ticks sit in the margin. */
+  .graticule {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: linear-gradient(to right, var(--grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+    background-size: 88px 88px;
+    mask-image: radial-gradient(ellipse 120% 80% at 50% 0%, #000 20%, transparent 78%);
+  }
+
+  /* --------------------------------------------------------------- labels */
+
+  .eyebrow {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--dim);
+    font-weight: 500;
+  }
+
+  .readout {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* A label with a leading tick, used to index sections. The tick encodes
+     nothing except "a section starts here", so it stays a mark, not a number. */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 1.75rem;
+    height: 1px;
+    background: var(--signal);
+    flex: none;
+  }
+
+  /* --------------------------------------------------------------- panels */
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+  }
+
+  .hairline {
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: 0;
+  }
+
+  /* --------------------------------------------------------------- controls */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.7rem 1.15rem;
+    border-radius: 2px;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    background: transparent;
+    transition: background-color 0.12s linear, border-color 0.12s linear, color 0.12s linear;
+  }
+
+  .btn:hover {
+    border-color: var(--dim);
+    background: var(--raised);
+  }
+
+  .btn-signal {
+    background: var(--signal);
+    border-color: var(--signal);
+    color: var(--signal-ink);
+    font-weight: 600;
+  }
+
+  .btn-signal:hover {
+    background: var(--signal);
+    border-color: var(--signal);
+    filter: brightness(1.08);
+  }
+
+  /* Segmented pills for category filters. */
+  .pill {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.42rem 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--dim);
+    white-space: nowrap;
+    transition: color 0.12s linear, border-color 0.12s linear, background-color 0.12s linear;
+  }
+
+  .pill:hover {
+    color: var(--ink);
+    border-color: var(--dim);
+  }
+
+  .pill[data-on='true'] {
+    color: var(--signal-ink);
+    background: var(--signal);
+    border-color: var(--signal);
+  }
+
+  /* Range inputs styled as instrument sliders: a hairline track with a
+     rectangular index mark, not a rounded thumb. */
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 22px;
+    background: transparent;
+  }
+
+  .slider::-webkit-slider-runnable-track {
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .slider::-moz-range-track {
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 3px;
+    height: 15px;
+    background: var(--signal);
+    border: 0;
+    border-radius: 0;
+    margin-top: -7px;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 3px;
+    height: 15px;
+    background: var(--signal);
+    border: 0;
+    border-radius: 0;
+  }
+
+  .slider:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px var(--ground), 0 0 0 5px var(--signal);
+  }
+
+  /* --------------------------------------------------------------- cards */
+
+  .card {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+    transition: border-color 0.14s linear, background-color 0.14s linear;
+  }
+
+  .card:hover,
+  .card:focus-within {
+    border-color: var(--dim);
+    background: var(--raised);
+  }
+
+  /* Corner ticks appear on hover — the same bracket language the cursors use. */
+  .card::before,
+  .card::after {
+    content: '';
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    opacity: 0;
+    transition: opacity 0.14s linear;
+    pointer-events: none;
+  }
+
+  .card::before {
+    top: 6px;
+    left: 6px;
+    border-top: 1px solid var(--signal);
+    border-left: 1px solid var(--signal);
+  }
+
+  .card::after {
+    bottom: 6px;
+    right: 6px;
+    border-bottom: 1px solid var(--signal);
+    border-right: 1px solid var(--signal);
+  }
+
+  .card:hover::before,
+  .card:hover::after,
+  .card:focus-within::before,
+  .card:focus-within::after {
+    opacity: 1;
+  }
+
+  /* --------------------------------------------------------------- code */
+
+  .code {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  /* Inline code inside running prose. Sits on the raised surface so it reads
+     as a token without breaking the line rhythm. */
+  .inline-code {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.86em;
+    color: var(--ink);
+    background: var(--raised);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0.1em 0.36em;
+    white-space: nowrap;
+  }
+
+  .code .tok-attr {
+    color: var(--signal);
+  }
+
+  .code .tok-str {
+    color: var(--ok);
+  }
+
+  .code .tok-tag {
+    color: var(--dim);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Wide display setting for the largest headlines only. */
+  .display-wide {
+    font-variation-settings: 'wdth' 125;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .display-narrow {
+    font-variation-settings: 'wdth' 88;
+  }
+}
+
+/* Entrance sequence: the graticule draws in, then content rises. Runs once on
+   load and is skipped entirely under reduced motion. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.anim-rise {
+  animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-sweep {
+  transform-origin: left;
+  animation: sweep 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-rise,
+  .anim-sweep {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

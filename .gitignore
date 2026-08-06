@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.next-dev/
+out/
+dist/
+.DS_Store
+*.log
+.env*.local
+.vercel
+apps/web/public/embed.js
+apps/web/public/embed.full.js
+apps/web/public/dashboard.js
+apps/web/public/m/
+apps/web/lib/embed-assets.generated.ts
+*.tsbuildinfo

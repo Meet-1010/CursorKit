@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>CursorKit — full style audit</title>
+<style>
+ body{margin:0;min-height:300vh;
+   background:radial-gradient(60% 50% at 25% 20%,#2b1a5e,transparent 60%),
+              radial-gradient(50% 40% at 75% 70%,#0d4f6b,transparent 60%),
+              linear-gradient(160deg,#0a0d13,#131a2c);}
+</style></head><body>
+ <div id="out"></div>
+ <script src="http://localhost:3000/embed.full.js?style=glass-bubble&color=e8f4ff"></script>
+ <script>
+ /* Renders every registered style and reports the ones that misbehave.
+    Some failures only appear in a real browser under motion — a style that
+    throws, one that paints nothing, or a glass style whose plate has grown a
+    border again (which splits the cursor into two sliding rings). Run this
+    after touching the engine: open it with `npm run dev` running. */
+ addEventListener('load', () => setTimeout(() => {
+   const ck = window.CursorKit, eng = ck.engine;
+   const cv = document.querySelector('canvas[data-cursorkit="surface"]');
+   const g2 = cv.getContext('2d');
+   const threw = [], blank = [], plateIssues = [];
+
+   for (const s of ck.allStyles()) {
+     try {
+       eng.update({ style: s.id });
+       for (let i = 0; i < 90; i++) {
+         eng.pointer.moveTo(400 + Math.sin(i / 9) * 90, 300 + Math.cos(i / 7) * 60);
+         eng.pointer.step(1 / 60, 0);
+       }
+       for (let i = 0; i < 6; i++) eng.render(1 / 60, 1 / 60);
+
+       const d = g2.getImageData(0, 0, cv.width, cv.height).data;
+       let painted = 0;
+       for (let i = 3; i < d.length; i += 4) if (d[i] > 6) painted++;
+       const plate = document.querySelector('[data-cursorkit="plate"]');
+       const shown = plate && plate.style.display !== 'none';
+       if (!painted && !(s.usesPlate && shown)) blank.push(s.id);
+
+       if (s.usesPlate && shown) {
+         const cs = getComputedStyle(plate);
+         if ((parseFloat(cs.borderTopWidth) || 0) > 0) plateIssues.push(s.id + ': plate border');
+         if (cs.boxShadow && cs.boxShadow !== 'none') plateIssues.push(s.id + ': plate box-shadow');
+         const masked = (cs.maskImage && cs.maskImage !== 'none') ||
+                        (cs.webkitMaskImage && cs.webkitMaskImage !== 'none');
+         if (!masked) plateIssues.push(s.id + ': not feathered');
+       }
+     } catch (e) { threw.push(s.id + ': ' + e); }
+   }
+
+   const ok = !threw.length && !blank.length && !plateIssues.length;
+   document.getElementById('out').innerHTML =
+     '<pre style="color:#fff;font:13px ui-monospace;padding:2rem">' +
+     (ok ? '\u2713 all ' + ck.allStyles().length + ' styles pass' :
+      'threw: ' + JSON.stringify(threw, null, 1) +
+      '\nblank: ' + JSON.stringify(blank, null, 1) +
+      '\nplate: ' + JSON.stringify(plateIssues, null, 1)) + '</pre>';
+ }, 400));
+ </script>
+</body></html>

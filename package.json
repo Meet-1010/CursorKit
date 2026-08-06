@@ -1,0 +1,21 @@
+{
+  "name": "cursorkit",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "engine": "npm run build -w @cursorkit/engine",
+    "dev": "npm run engine && npm run dev -w @cursorkit/web",
+    "build": "npm run engine && npm run build -w @cursorkit/web",
+    "start": "npm run start -w @cursorkit/web",
+    "size": "npm run size -w @cursorkit/engine",
+    "test": "npm run engine && npm run test -w @cursorkit/engine",
+    "typecheck": "npm run typecheck -w @cursorkit/engine && npm run typecheck -w @cursorkit/web"
+  },
+  "engines": {
+    "node": ">=18.17"
+  }
+}

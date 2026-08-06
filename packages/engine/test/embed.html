@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CursorKit embed smoke test</title>
+<style>
+  body { background:#0a0d13; color:#dfe4ec; font:16px/1.6 system-ui,sans-serif; margin:0; padding:6rem 3rem; }
+  h1 { font-size:2.4rem; margin:0 0 1rem; }
+  a { color:#ffa132; }
+  button { padding:.8rem 1.4rem; font:inherit; background:#161c29; color:#dfe4ec; border:1px solid #212938; border-radius:3px; }
+  .box { margin-top:2rem; display:flex; gap:1rem; align-items:center; }
+</style>
+</head>
+<body>
+  <h1>Plain HTML. No framework. No build step.</h1>
+  <p>One script tag at the bottom of this file is the entire integration.</p>
+  <div class="box">
+    <button type="button">A button</button>
+    <a href="#nowhere">A link</a>
+    <span data-cursor="custom" data-cursor-label="Custom target">data-cursor element</span>
+    <span data-cursor="native">native cursor here</span>
+  </div>
+
+  <script src="http://localhost:3000/embed.js?style=magnetic-blob&click=shockwave&color=ff00ff&size=1.2&hover=magnet"></script>
+</body>
+</html>

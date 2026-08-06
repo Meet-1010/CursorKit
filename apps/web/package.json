@@ -1,0 +1,30 @@
+{
+  "name": "@cursorkit/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "collect": "node scripts/collect-embed.mjs",
+    "predev": "npm run collect",
+    "dev": "next dev",
+    "prebuild": "npm run collect",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cursorkit/engine": "*",
+    "framer-motion": "^11.15.0",
+    "next": "14.2.21",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2"
+  }
+}
