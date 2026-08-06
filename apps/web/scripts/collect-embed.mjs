@@ -1,20 +1,50 @@
 /**
- * Copies the engine's built chunks into a generated TypeScript module.
+ * Builds the engine, then copies its output into this workspace.
  *
- * The `/embed.js` route assembles a response by concatenating core with the one
- * style and one effect a visitor asked for. Reading those from disk at request
- * time would tie the route to a Node filesystem; inlining them as strings keeps
- * it deployable to an edge runtime, where this route belongs.
+ * This used to assume `packages/engine/dist` was already fresh, built moments
+ * earlier by a separate `npm run engine` invocation that the root `build`
+ * script chained before this one. That works everywhere it was tried except
+ * one hosted build runner, where `embed.js` was reproducibly still ENOENT
+ * here — even after polling for several seconds — despite the engine build's
+ * own process having just finished reading that same file back to report its
+ * size. Whatever the cause, it lived at the boundary between two independent
+ * npm-script processes trusting each other's filesystem state.
+ *
+ * So that boundary is gone. This script spawns the engine build itself and
+ * awaits its real exit code before touching `dist/` — the only guarantee this
+ * needed was "the process that wrote these files has fully exited before I
+ * read them," and a direct parent/child relationship is the one way to have
+ * that guarantee unconditionally, on any infrastructure.
  *
  * Runs from `predev` and `prebuild`, so the generated file is never stale.
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const web = path.join(here, '..');
-const dist = path.join(web, '..', '..', 'packages', 'engine', 'dist');
+const engineDir = path.join(web, '..', '..', 'packages', 'engine');
+const dist = path.join(engineDir, 'dist');
+
+function runEngineBuild() {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, ['build.mjs'], { cwd: engineDir, stdio: 'inherit' });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`engine build exited with code ${code}`));
+    });
+  });
+}
+
+try {
+  await runEngineBuild();
+} catch (err) {
+  console.error(`\n  Engine build failed: ${err.message}\n`);
+  process.exit(1);
+}
 
 const exists = async (p) => {
   try {
@@ -25,26 +55,11 @@ const exists = async (p) => {
   }
 };
 
-/**
- * `npm run engine` and this script are separate OS processes: the engine build
- * writes its report only after every dist file lands, so a plain existence
- * check right after that process exits should always pass. On at least one
- * hosted build runner it did not — `core.js` and `dist/m/*.js` were visible but
- * `embed.js`, written in the same batch, was not yet, for a window of a few
- * hundred ms. Rather than depend on the two processes' filesystem views
- * syncing up instantly, wait for it.
- */
-async function waitFor(p, { tries = 20, delayMs = 150 } = {}) {
-  for (let i = 0; i < tries; i++) {
-    if (await exists(p)) return;
-    await new Promise((r) => setTimeout(r, delayMs));
-  }
-}
-
-await waitFor(path.join(dist, 'core.js'));
 if (!(await exists(path.join(dist, 'core.js')))) {
+  const seen = await fs.readdir(dist).catch(() => []);
   console.error(
-    '\n  Engine not built. Run `npm run engine` from the repo root first.\n',
+    `\n  Engine build reported success but ${path.join(dist, 'core.js')} is missing.\n` +
+      `  dist/ contains: ${seen.join(', ') || '(empty)'}\n`,
   );
   process.exit(1);
 }
@@ -83,8 +98,6 @@ await fs.writeFile(path.join(web, 'lib', 'embed-assets.generated.ts'), out);
 
 // Two static bundles alongside the assembled route: the whole library, for
 // anyone switching styles at runtime, and the embeddable builder dashboard.
-await waitFor(path.join(dist, 'embed.js'));
-await waitFor(path.join(dist, 'dashboard.js'));
 await fs.copyFile(path.join(dist, 'embed.js'), path.join(web, 'public', 'embed.full.js'));
 await fs.copyFile(path.join(dist, 'dashboard.js'), path.join(web, 'public', 'dashboard.js'));
 

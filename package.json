@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "engine": "npm run build -w @cursorkit/engine",
-    "dev": "npm run engine && npm run dev -w @cursorkit/web",
-    "build": "npm run engine && npm run build -w @cursorkit/web",
+    "dev": "npm run dev -w @cursorkit/web",
+    "build": "npm run build -w @cursorkit/web",
     "extension": "npm run engine && node extension/build.mjs",
     "start": "npm run start -w @cursorkit/web",
     "size": "npm run size -w @cursorkit/engine",
