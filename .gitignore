@@ -13,3 +13,8 @@ apps/web/public/dashboard.js
 apps/web/public/m/
 apps/web/lib/embed-assets.generated.ts
 *.tsbuildinfo
+
+# Extension: engine.js is copied from the engine build
+extension/engine.js
+extension/_preview.html
+extension/_stub.js

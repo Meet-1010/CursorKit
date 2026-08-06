@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="popup.css">
+<title>CursorKit</title>
+</head>
+<body>
+  <header>
+    <img class="mark" src="icons/48.png" alt="" width="22" height="22">
+    <div class="site">
+      <p class="eyebrow">Cursor on</p>
+      <p id="host" class="host">this site</p>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="enabled" checked>
+      <span class="track" aria-hidden="true"></span>
+      <span class="sr">Enable on this site</span>
+    </label>
+  </header>
+
+  <!-- The one region that wears the cursor. Everything else keeps the native
+       pointer, because choosing a cursor is harder when the tool is wearing it. -->
+  <section class="stage" id="stage">
+    <p class="stage-copy">Move here to try it.</p>
+    <div class="stage-row">
+      <button type="button" class="chip">A button</button>
+      <a href="#" class="chip link">A link</a>
+    </div>
+  </section>
+
+  <div class="panel" data-native>
+    <div class="row">
+      <label for="style">Style</label>
+      <select id="style"></select>
+    </div>
+    <div class="row">
+      <label for="click">Click</label>
+      <select id="click"></select>
+    </div>
+    <div class="row">
+      <label for="hover">Hover</label>
+      <select id="hover"></select>
+    </div>
+
+    <div class="row">
+      <label for="color">Colour</label>
+      <div class="colour">
+        <input type="color" id="color">
+        <div class="swatches" id="swatches"></div>
+      </div>
+    </div>
+
+    <div class="row"><label for="size">Size</label><input type="range" id="size" min="0.4" max="3" step="0.05"><output id="sizeOut"></output></div>
+    <div class="row"><label for="speed">Speed</label><input type="range" id="speed" min="0.25" max="3" step="0.05"><output id="speedOut"></output></div>
+    <div class="row"><label for="opacity">Opacity</label><input type="range" id="opacity" min="0.05" max="1" step="0.05"><output id="opacityOut"></output></div>
+
+    <div class="row check">
+      <label for="adapt">Adapt to page</label>
+      <input type="checkbox" id="adapt">
+      <span class="note">Keeps the cursor legible on whatever it is over.</span>
+    </div>
+
+    <footer>
+      <button type="button" id="reset" class="ghost">Reset</button>
+      <span id="count" class="count"></span>
+    </footer>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="engine.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

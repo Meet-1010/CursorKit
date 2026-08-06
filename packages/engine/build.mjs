@@ -39,7 +39,7 @@ const REAL_MATH = { '@ck/math': src('core/math.ts') };
 const SHIM_MATH = { '@ck/math': src('core/math-shim.ts') };
 
 const STYLE_FILES = [
-  'minimal', 'geometric', 'fluid', 'trails',
+  'minimal', 'geometric', 'fluid', 'lens', 'trails',
   'particles', 'tech', 'playful', 'luxury',
   'neumorphic', 'brutalist', 'more',
 ].map((n) => `styles/${n}.ts`);
@@ -135,6 +135,9 @@ async function main() {
     ['embed.ts', 'embed.js'],
     ['core-entry.ts', 'core.js'],
     ['dashboard.ts', 'dashboard.js'],
+    // Whole library, no self-boot. The browser extension loads this and decides
+    // for itself whether the current site should have a cursor at all.
+    ['library.ts', 'library.js'],
   ]) {
     await build({
       ...base,

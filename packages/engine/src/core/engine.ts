@@ -118,6 +118,7 @@ export class Engine {
     this.hoverWatcher?.detach();
     this.unsubscribe?.();
     this.unsubscribe = null;
+    this.style?.dispose?.(this.styleState);
     this.surface.destroy();
     if (!this.host.keepNativeCursor) restoreNativeCursor();
     this.live.length = 0;
@@ -146,6 +147,9 @@ export class Engine {
   private resolve(): void {
     const next = getStyle(this.o.style) || getStyle(DEFAULTS.style) || null;
     if (next !== this.style) {
+      // A style that built its own DOM has to be told to take it down, or
+      // switching styles in the builder leaves the old one's layers behind.
+      this.style?.dispose?.(this.styleState);
       this.style = next;
       this.styleState = next?.state?.() ?? null;
     }
@@ -292,7 +296,12 @@ export class Engine {
     const nativeFade = p.hover === 'native' ? 0 : 1;
     ctx.alpha = o.opacity * p.vis * nativeFade;
 
-    if (ctx.alpha <= 0.002) return;
+    // A DOM-backed style keeps painting on its own, so it has to be told the
+    // cursor is meant to be invisible rather than simply not asked to draw.
+    if (ctx.alpha <= 0.002) {
+      this.style?.hidden?.(this.styleState);
+      return;
+    }
 
     const c = sf.c;
 

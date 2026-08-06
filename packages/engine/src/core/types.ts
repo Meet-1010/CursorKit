@@ -163,6 +163,17 @@ export interface CursorStyle<S = any> {
   trail?: number;
   state?(): S;
   draw(ctx: Ctx, s: S): void;
+  /**
+   * Called instead of `draw` on frames the cursor is invisible — off-screen, or
+   * over an element that asked for the native cursor back.
+   *
+   * Canvas styles need nothing here: the engine clears the frame for them. A
+   * style backed by its own DOM does, because that DOM keeps painting whether
+   * or not the engine drew a frame.
+   */
+  hidden?(s: S): void;
+  /** Release anything `draw` created outside the canvas. */
+  dispose?(s: S): void;
 }
 
 export interface EffectInstance {

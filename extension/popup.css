@@ -1,0 +1,140 @@
+/* Deliberately close to the CursorKit site: the extension is the same product,
+   and a visitor who has seen one should recognise the other. */
+
+* { box-sizing: border-box; margin: 0; }
+
+:root {
+  --bg: #0a0d13;
+  --panel: #11151d;
+  --ink: #e9edf4;
+  --dim: #8b95a7;
+  --rule: #1e2430;
+  --signal: #ffa132;
+  --signal-ink: #14100a;
+}
+
+body {
+  width: 340px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 13px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+/* ------------------------------------------------------------- header --- */
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.mark { width: 22px; height: 22px; flex: none; border-radius: 5px; }
+
+.site { flex: 1; min-width: 0; }
+.eyebrow {
+  font: 500 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
+}
+.host {
+  margin-top: 3px; font-size: 13px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.switch { position: relative; flex: none; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.track {
+  display: block; width: 38px; height: 22px; border-radius: 11px;
+  background: #232a37; transition: background .15s;
+}
+.track::after {
+  content: ''; display: block; width: 16px; height: 16px; margin: 3px;
+  border-radius: 50%; background: var(--dim); transition: transform .15s, background .15s;
+}
+.switch input:checked + .track { background: color-mix(in srgb, var(--signal) 32%, #232a37); }
+.switch input:checked + .track::after { transform: translateX(16px); background: var(--signal); }
+.switch input:focus-visible + .track { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+/* -------------------------------------------------------------- stage --- */
+
+.stage {
+  height: 104px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background:
+    radial-gradient(120% 120% at 50% 0%, #151b26 0%, #0d111a 70%);
+  border-bottom: 1px solid var(--rule);
+}
+.stage-copy { color: var(--dim); font-size: 12px; }
+.stage-row { display: flex; gap: 8px; }
+.chip {
+  font: 500 12px/1 inherit; color: var(--ink);
+  background: #171d28; border: 1px solid var(--rule); border-radius: 4px;
+  padding: 7px 12px;
+}
+.chip.link { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--signal); }
+
+/* -------------------------------------------------------------- panel --- */
+
+.panel { padding: 12px 14px 14px; }
+
+.row {
+  display: grid;
+  grid-template-columns: 62px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+}
+.row > label { color: var(--dim); font-size: 12px; }
+
+select, input[type=range], input[type=color] { width: 100%; }
+
+select {
+  appearance: none;
+  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b95a7' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 9px center;
+  color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 4px;
+  padding: 6px 26px 6px 9px; font: inherit;
+}
+select:focus-visible, input:focus-visible { outline: 2px solid var(--signal); outline-offset: 1px; }
+
+input[type=range] {
+  appearance: none; height: 3px; border-radius: 2px; background: var(--rule);
+}
+input[type=range]::-webkit-slider-thumb {
+  appearance: none; width: 13px; height: 13px; border-radius: 50%;
+  background: var(--signal); border: none; margin-top: -5px;
+}
+output { font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--dim); min-width: 26px; text-align: right; }
+
+.colour { display: flex; align-items: center; gap: 8px; grid-column: 2 / 4; }
+input[type=color] {
+  width: 30px; height: 24px; flex: none; padding: 0;
+  background: none; border: 1px solid var(--rule); border-radius: 4px;
+}
+input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; }
+input[type=color]::-webkit-color-swatch { border: none; border-radius: 2px; }
+.swatches { display: flex; gap: 4px; }
+.swatches button {
+  width: 16px; height: 16px; border-radius: 50%; border: 1px solid #0006; padding: 0;
+  cursor: pointer;
+}
+
+.check { grid-template-columns: 1fr auto; }
+.check > label { color: var(--ink); font-size: 12px; }
+.check input { width: 14px; height: 14px; accent-color: var(--signal); }
+.check .note { grid-column: 1 / -1; color: var(--dim); font-size: 11px; margin-top: -2px; }
+
+footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--rule);
+}
+.ghost {
+  font: 12px inherit; color: var(--dim);
+  background: none; border: 1px solid var(--rule); border-radius: 4px;
+  padding: 5px 10px; cursor: pointer;
+}
+.ghost:hover { color: var(--ink); border-color: #2c3444; }
+.count { font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--dim); }

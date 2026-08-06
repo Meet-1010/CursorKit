@@ -1,6 +1,7 @@
 import { brutalistStyles } from './brutalist';
 import { fluidStyles } from './fluid';
 import { geometricStyles } from './geometric';
+import { lensStyles } from './lens';
 import { luxuryStyles } from './luxury';
 import { minimalStyles } from './minimal';
 import { moreStyles } from './more';
@@ -15,6 +16,7 @@ export const styleDefs: CursorStyle<any>[] = [
   ...minimalStyles,
   ...geometricStyles,
   ...fluidStyles,
+  ...lensStyles,
   ...trailStyles,
   ...particleStyles,
   ...techStyles,
@@ -30,6 +32,7 @@ export const styleDefs: CursorStyle<any>[] = [
 export * from './minimal';
 export * from './geometric';
 export * from './fluid';
+export * from './lens';
 export * from './trails';
 export * from './particles';
 export * from './tech';

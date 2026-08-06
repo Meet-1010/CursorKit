@@ -6,7 +6,7 @@ Custom cursors for any website, in one script tag.
 <script src="https://cursorkit.io/embed.js?style=magnetic-blob&click=shockwave&color=ff00ff&size=1.2"></script>
 ```
 
-No npm, no build step, no framework dependency. **126 cursor styles** across ten
+No npm, no build step, no framework dependency. **127 cursor styles** across ten
 categories, **59 click effects**, **29 hover transforms**, and curated colour
 palettes — rendered at 60fps, and legible on whatever they are over.
 
@@ -20,6 +20,7 @@ neumorphic and brutalist.
 ```
 packages/engine     The cursor engine. Zero dependencies, TypeScript → canvas.
 apps/web            The Next.js site: gallery, builder, docs, and the CDN route.
+extension           Chrome extension: the builder as a popup, on any site.
 ```
 
 ## Getting started
@@ -36,6 +37,7 @@ starts the site on <http://localhost:3000>.
 | --- | --- |
 | `npm run dev` | Build the engine, then run the site |
 | `npm run build` | Production build of both packages |
+| `npm run extension` | Build the engine, then assemble the Chrome extension |
 | `npm test` | Build the engine and run its test suite |
 | `npm run size` | Report bundle sizes against the 15kb budget |
 | `npm run typecheck` | Typecheck both packages |
@@ -106,6 +108,20 @@ Two conventions matter:
   so one definition can drive many simultaneous previews.
 - **Never assign `globalAlpha`.** The engine has already set it to the cursor's
   visibility. Express transparency through `rgba()` colours, or multiply.
+
+## The one style that is not canvas
+
+`lens-ball` is a glass sphere that genuinely refracts the page: a displacement
+texture generated at boot, fed to an `feDisplacementMap` through
+`backdrop-filter: url(…)`, run three times at slightly different scales to get
+the dispersion. A canvas overlay cannot do this — it has no access to the pixels
+underneath it — so this style owns a DOM layer, which is why `CursorStyle` has
+`hidden` and `dispose` hooks. Nothing else in the library uses them.
+
+**Chromium refracts; Safari and Firefox frost.** Both support `backdrop-filter`
+but only its shorthand functions, so `url()` silently does nothing there. The
+style detects this and falls back to a blurred, brightened ball — still glass,
+just without the bend. Worth knowing before it goes on a landing page.
 
 ## Testing
 
