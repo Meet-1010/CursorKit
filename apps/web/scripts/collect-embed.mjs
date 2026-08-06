@@ -25,6 +25,23 @@ const exists = async (p) => {
   }
 };
 
+/**
+ * `npm run engine` and this script are separate OS processes: the engine build
+ * writes its report only after every dist file lands, so a plain existence
+ * check right after that process exits should always pass. On at least one
+ * hosted build runner it did not — `core.js` and `dist/m/*.js` were visible but
+ * `embed.js`, written in the same batch, was not yet, for a window of a few
+ * hundred ms. Rather than depend on the two processes' filesystem views
+ * syncing up instantly, wait for it.
+ */
+async function waitFor(p, { tries = 20, delayMs = 150 } = {}) {
+  for (let i = 0; i < tries; i++) {
+    if (await exists(p)) return;
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+}
+
+await waitFor(path.join(dist, 'core.js'));
 if (!(await exists(path.join(dist, 'core.js')))) {
   console.error(
     '\n  Engine not built. Run `npm run engine` from the repo root first.\n',
@@ -66,6 +83,8 @@ await fs.writeFile(path.join(web, 'lib', 'embed-assets.generated.ts'), out);
 
 // Two static bundles alongside the assembled route: the whole library, for
 // anyone switching styles at runtime, and the embeddable builder dashboard.
+await waitFor(path.join(dist, 'embed.js'));
+await waitFor(path.join(dist, 'dashboard.js'));
 await fs.copyFile(path.join(dist, 'embed.js'), path.join(web, 'public', 'embed.full.js'));
 await fs.copyFile(path.join(dist, 'dashboard.js'), path.join(web, 'public', 'dashboard.js'));
 
