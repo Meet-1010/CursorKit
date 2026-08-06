@@ -109,7 +109,7 @@ let uid = 0;
 
 interface LensState {
   lens: HTMLElement | null;
-  gloss: HTMLElement | null;
+  edge: HTMLElement | null;
   svg: SVGSVGElement | null;
   /** Eased size, so hover and press are a swell rather than a jump. */
   k: number;
@@ -118,11 +118,38 @@ interface LensState {
   fixed: boolean;
 }
 
-/** Bright rim plus one specular. Without the rim the ball vanishes on white. */
-const GLOSS =
-  'radial-gradient(circle at 33% 25%,rgba(255,255,255,.9) 0%,rgba(255,255,255,.35) 8%,rgba(255,255,255,0) 20%),' +
-  'radial-gradient(circle at 50% 50%,rgba(255,255,255,.10) 0%,rgba(255,255,255,.06) 52%,' +
-  'rgba(255,255,255,.30) 80%,rgba(255,255,255,.66) 93%,rgba(255,255,255,.30) 99%,rgba(255,255,255,0) 100%)';
+/**
+ * The sphere's edge, and nothing else.
+ *
+ * An earlier version painted a specular hotspot and a wide white wash inside
+ * the rim. Both were wrong for the same reason: they are *paint*, and paint
+ * laid over a lens reads as a smear on the glass rather than as glass. The
+ * refraction already describes the volume — magnified through the middle,
+ * compressed at the rim — so anything added inside competes with the one thing
+ * that is doing the work.
+ *
+ * So the inside is left alone entirely. Depth is built on the outside: a
+ * hairline exactly on the boundary to keep the silhouette crisp, and a shadow
+ * the ball casts onto the page, which is what makes it sit *above* the page
+ * instead of reading as a hole cut into it.
+ */
+const EDGE =
+  'radial-gradient(circle at 50% 50%,rgba(255,255,255,0) 95%,' +
+  'rgba(255,255,255,.16) 98.5%,rgba(255,255,255,0) 100%)';
+
+/**
+ * Cast outward, never inset. An inset dark shadow is the obvious way to suggest
+ * volume and it is a trap: over dark content it stops reading as shading and
+ * becomes a grey crescent floating inside the ball — a second, broken shape
+ * rather than one sphere.
+ */
+const CAST =
+  // A hairline ring sitting just outside the silhouette, so the ball still has
+  // an edge over a flat background with nothing in it to bend.
+  '0 0 0 1px rgba(255,255,255,.055),' +
+  // Light catching the top of the sphere from outside, rather than painted on.
+  '0 -1px 0 0 rgba(255,255,255,.09),' +
+  '0 12px 24px rgba(6,10,18,.38),0 3px 7px rgba(6,10,18,.22)';
 
 function build(ctx: Ctx, s: LensState): void {
   s.built = true;
@@ -175,7 +202,7 @@ function build(ctx: Ctx, s: LensState): void {
   }
 
   const filter = CAN_REFRACT
-    ? `blur(.35px) url(#${id}) brightness(1.05) saturate(1.06)`
+    ? `blur(.35px) url(#${id}) brightness(1.02) saturate(1.06)`
     : 'blur(3px) brightness(1.06) saturate(1.15)';
 
   // One below the canvas: the cursor's own painting must sit on top of the
@@ -190,18 +217,14 @@ function build(ctx: Ctx, s: LensState): void {
   lens.setAttribute('aria-hidden', 'true');
   lens.style.cssText = `${box}backdrop-filter:${filter};-webkit-backdrop-filter:${filter};`;
 
-  // Light only. An inset *dark* shadow is the obvious way to suggest volume and
-  // it is a trap: over dark content it stops reading as shading and becomes a
-  // grey crescent floating inside the ball, which looks like a second, broken
-  // shape rather than one sphere. Everything here adds light or nothing.
-  const gloss = document.createElement('div');
-  gloss.setAttribute('aria-hidden', 'true');
-  gloss.style.cssText = `${box}background:${GLOSS};`;
+  const edge = document.createElement('div');
+  edge.setAttribute('aria-hidden', 'true');
+  edge.style.cssText = `${box}background:${EDGE};box-shadow:${CAST};`;
 
   parent.appendChild(lens);
-  parent.appendChild(gloss);
+  parent.appendChild(edge);
   s.lens = lens;
-  s.gloss = gloss;
+  s.edge = edge;
   s.fixed = fixed;
 }
 
@@ -210,12 +233,12 @@ export const lensBall: CursorStyle<LensState> = {
   name: 'Lens Ball',
   category: 'fluid',
   blurb: 'A glass sphere that magnifies and disperses the page beneath it.',
-  state: () => ({ lens: null, gloss: null, svg: null, k: 1, built: false, fixed: true }),
+  state: () => ({ lens: null, edge: null, svg: null, k: 1, built: false, fixed: true }),
 
   draw(ctx, s) {
     if (!s.built) build(ctx, s);
-    const { lens, gloss } = s;
-    if (!lens || !gloss) return;
+    const { lens, edge } = s;
+    if (!lens || !edge) return;
 
     const { p } = ctx;
     // Press pulls the ball in slightly, the way a bead does against a surface.
@@ -228,21 +251,21 @@ export const lensBall: CursorStyle<LensState> = {
     const a = String(ctx.alpha);
 
     lens.style.transform = t;
-    gloss.style.transform = t;
+    edge.style.transform = t;
     lens.style.opacity = a;
-    gloss.style.opacity = a;
+    edge.style.opacity = a;
   },
 
   hidden(s) {
     if (s.lens) s.lens.style.opacity = '0';
-    if (s.gloss) s.gloss.style.opacity = '0';
+    if (s.edge) s.edge.style.opacity = '0';
   },
 
   dispose(s) {
     s.lens?.remove();
-    s.gloss?.remove();
+    s.edge?.remove();
     s.svg?.remove();
-    s.lens = s.gloss = null;
+    s.lens = s.edge = null;
     s.svg = null;
     s.built = false;
   },
