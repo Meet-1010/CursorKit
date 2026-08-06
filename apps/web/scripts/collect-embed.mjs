@@ -98,8 +98,20 @@ await fs.writeFile(path.join(web, 'lib', 'embed-assets.generated.ts'), out);
 
 // Two static bundles alongside the assembled route: the whole library, for
 // anyone switching styles at runtime, and the embeddable builder dashboard.
-await fs.copyFile(path.join(dist, 'embed.js'), path.join(web, 'public', 'embed.full.js'));
-await fs.copyFile(path.join(dist, 'dashboard.js'), path.join(web, 'public', 'dashboard.js'));
+//
+// Deliberately read+write rather than `fs.copyFile`. Every other file in this
+// script — core.js, all ~200 chunks — goes through `readFile` and was never
+// once missing. Only these two calls, the only ones using `copyFile`, hit a
+// reproducible ENOENT on one hosted build runner even moments after the
+// source file had just been read successfully by this same process.
+// `copyFile` takes an OS-level fast path (copy_file_range/sendfile) that
+// `readFile`/`writeFile` do not, which is the one mechanical difference
+// between the calls that fail and the calls that never do.
+async function copyFileContents(src, dest) {
+  await fs.writeFile(dest, await fs.readFile(src));
+}
+await copyFileContents(path.join(dist, 'embed.js'), path.join(web, 'public', 'embed.full.js'));
+await copyFileContents(path.join(dist, 'dashboard.js'), path.join(web, 'public', 'dashboard.js'));
 
 const kb = (s) => (Buffer.byteLength(s) / 1024).toFixed(1) + 'kb';
 console.log(
