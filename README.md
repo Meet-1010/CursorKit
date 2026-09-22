@@ -1,5 +1,8 @@
 # CursorKit
 
+
+![CursorKit Demo](cursorkit-demo.gif)
+
 Custom cursors for any website, in one script tag.
 
 ```html
