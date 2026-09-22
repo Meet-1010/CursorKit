@@ -1,7 +1,7 @@
 # CursorKit
 
 
-https://github.com/Meet-1010/CursorKit/raw/main/cursorkit-demo.mp4
+https://github.com/user-attachments/assets/d684afdb-19d6-4683-b144-450146642bf5
 
 Custom cursors for any website, in one script tag.
 
