@@ -1,7 +1,11 @@
 # CursorKit
 
 
-<video src="cursorkit-demo.mp4" autoplay loop muted playsinline width="100%"></video>
+<a href="https://github.com/Meet-1010/CursorKit/raw/main/cursorkit-demo.mp4">
+  <img src="cursorkit-poster.jpg" alt="CursorKit Demo" width="100%">
+</a>
+
+> *Click the image to watch the launch video*
 
 Custom cursors for any website, in one script tag.
 
