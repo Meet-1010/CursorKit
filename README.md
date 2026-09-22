@@ -1,7 +1,7 @@
 # CursorKit
 
 
-![CursorKit Demo](cursorkit-demo.gif)
+https://github.com/user-attachments/assets/cursorkit-demo.mp4
 
 Custom cursors for any website, in one script tag.
 
