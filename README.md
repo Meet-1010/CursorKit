@@ -1,7 +1,7 @@
 # CursorKit
 
 
-https://github.com/user-attachments/assets/cursorkit-demo.mp4
+<video src="cursorkit-demo.mp4" autoplay loop muted playsinline width="100%"></video>
 
 Custom cursors for any website, in one script tag.
 
