@@ -1,7 +1,7 @@
 # CursorKit
 
 
-https://github.com/user-attachments/assets/f3e03a17-1093-4836-a577-26a8ef688977
+https://github.com/user-attachments/assets/b42157de-f0b9-4462-952f-2f6e3fe788ff
 
 Custom cursors for any website, in one script tag.
 
